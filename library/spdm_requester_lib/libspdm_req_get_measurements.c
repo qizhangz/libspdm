@@ -513,7 +513,7 @@ return_status libspdm_get_measurement(IN void *context, IN uint32_t *session_id,
             spdm_context, session_id, request_attribute,
             measurement_operation, slot_id_param, content_changed, number_of_blocks,
             measurement_record_length, measurement_record, NULL, NULL, NULL);
-        if (RETURN_NO_RESPONSE != status) {
+        if ((RETURN_NO_RESPONSE != status) && (RETURN_TIMEOUT != status)) {
             return status;
         }
     } while (retry-- != 0);
@@ -571,7 +571,7 @@ return_status libspdm_get_measurement_ex(IN void *context, IN uint32_t *session_
             measurement_record_length, measurement_record,
             requester_nonce_in,
             requester_nonce, responder_nonce);
-        if (RETURN_NO_RESPONSE != status) {
+        if ((RETURN_NO_RESPONSE != status) && (RETURN_TIMEOUT != status)) {
             return status;
         }
     } while (retry-- != 0);

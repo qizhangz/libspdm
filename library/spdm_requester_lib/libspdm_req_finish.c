@@ -263,7 +263,7 @@ return_status spdm_send_receive_finish(IN spdm_context_t *spdm_context,
     do {
         status = try_spdm_send_receive_finish(spdm_context, session_id,
                               req_slot_id_param);
-        if (RETURN_NO_RESPONSE != status) {
+        if ((RETURN_NO_RESPONSE != status) && (RETURN_TIMEOUT != status)) {
             return status;
         }
     } while (retry-- != 0);

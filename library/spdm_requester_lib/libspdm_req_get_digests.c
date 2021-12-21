@@ -194,7 +194,7 @@ return_status libspdm_get_digest(IN void *context, OUT uint8_t *slot_mask,
     do {
         status = try_spdm_get_digest(spdm_context, slot_mask,
                          total_digest_buffer);
-        if (RETURN_NO_RESPONSE != status) {
+        if ((RETURN_NO_RESPONSE != status) && (RETURN_TIMEOUT != status)) {
             return status;
         }
     } while (retry-- != 0);

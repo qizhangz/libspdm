@@ -87,4 +87,13 @@
 #define LIBSPDM_ENABLE_CAPABILITY_KEY_EX_CAP 1
 #define LIBSPDM_ENABLE_CAPABILITY_PSK_EX_CAP 1
 
+/* Worst case round-trip transport timing in microseconds */
+#define LIBSPDM_RTT_VALUE               10000
+
+/**
+  2^CT is maximum amount of time in microseconds that the endpoint has
+  to provide any response requiring cryptographic processing
+**/
+#define LIBSPDM_CT_EXPONENT_VALUE       20
+
 #endif

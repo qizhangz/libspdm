@@ -279,7 +279,7 @@ return_status libspdm_key_update(IN void *context, IN uint32_t session_id,
     do {
         status = try_spdm_key_update(context, session_id,
                               single_direction, &key_updated);
-        if (RETURN_NO_RESPONSE != status) {
+        if ((RETURN_NO_RESPONSE != status) && (RETURN_TIMEOUT != status)) {
             return status;
         }
     } while (retry-- != 0);

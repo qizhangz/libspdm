@@ -416,7 +416,7 @@ return_status spdm_send_receive_psk_exchange(IN spdm_context_t *spdm_context,
             spdm_context, measurement_hash_type, session_policy, session_id,
             heartbeat_period, measurement_hash,
             NULL, 0, NULL, NULL, NULL, NULL);
-        if (RETURN_NO_RESPONSE != status) {
+        if ((RETURN_NO_RESPONSE != status) && (RETURN_TIMEOUT != status)) {
             return status;
         }
     } while (retry-- != 0);
@@ -472,7 +472,7 @@ return_status spdm_send_receive_psk_exchange_ex(IN spdm_context_t *spdm_context,
             requester_context_in, requester_context_in_size,
             requester_context, requester_context_size,
             responder_context, responder_context_size);
-        if (RETURN_NO_RESPONSE != status) {
+        if ((RETURN_NO_RESPONSE != status) && (RETURN_TIMEOUT != status)) {
             return status;
         }
     } while (retry-- != 0);

@@ -1890,6 +1890,7 @@ return_status libspdm_init_context(IN void *context)
         sizeof(spdm_context->transcript.message_m.buffer);
 #endif
     spdm_context->retry_times = LIBSPDM_MAX_REQUEST_RETRY_TIMES;
+    spdm_context->crypto_request = TRUE;
     spdm_context->response_state = LIBSPDM_RESPONSE_STATE_NORMAL;
     spdm_context->current_token = 0;
     spdm_context->local_context.version.spdm_version_count = 3;
@@ -1900,6 +1901,10 @@ return_status libspdm_init_context(IN void *context)
         1;
     spdm_context->local_context.secured_message_version.spdm_version[0] = 
         SPDM_MESSAGE_VERSION_11 << SPDM_VERSION_NUMBER_SHIFT_BIT;
+    spdm_context->local_context.capability.st1 = SPDM_ST1_VALUE;
+    spdm_context->local_context.capability.ct_exponent = LIBSPDM_CT_EXPONENT_VALUE;
+    spdm_context->local_context.capability.rtt = LIBSPDM_RTT_VALUE;
+
     spdm_context->encap_context.certificate_chain_buffer.max_buffer_size =
         sizeof(spdm_context->encap_context.certificate_chain_buffer.buffer);
 

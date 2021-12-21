@@ -5,6 +5,7 @@
 **/
 
 #include "internal/libspdm_requester_lib.h"
+#include "hal/library/timelib.h"
 
 /**
   This function sends GET_VERSION, GET_CAPABILITIES, NEGOTIATE_ALGORITHM
@@ -75,6 +76,7 @@ return_status libspdm_start_session(IN void *context, IN boolean use_psk,
 {
     return_status status;
     spdm_context_t *spdm_context;
+    spdm_stop_session_t spdm_stop_session_context;
 
     #if LIBSPDM_ENABLE_CAPABILITY_KEY_EX_CAP
     spdm_session_info_t *session_info;
@@ -96,6 +98,11 @@ return_status libspdm_start_session(IN void *context, IN boolean use_psk,
                    status));
             return status;
         }
+
+        spdm_stop_session_context.spdm_context = spdm_context;
+        spdm_stop_session_context.session_id = *session_id;
+        spdm_stop_session_context.end_session_attributes = 0;
+        init_watchdog(*heartbeat_period, spdm_stop_session_context, libspdm_stop_session);
 
         session_info = libspdm_get_session_info_via_session_id(
             spdm_context, *session_id);
@@ -152,6 +159,11 @@ return_status libspdm_start_session(IN void *context, IN boolean use_psk,
                    status));
             return status;
         }
+
+        spdm_stop_session_context.spdm_context = spdm_context;
+        spdm_stop_session_context.session_id = *session_id;
+        spdm_stop_session_context.end_session_attributes = 0;
+        init_watchdog(*heartbeat_period, spdm_stop_session_context, libspdm_stop_session);
 
         /* send PSK_FINISH only if Responder supports context.*/
         if (spdm_is_capabilities_flag_supported(
@@ -220,6 +232,7 @@ return_status libspdm_start_session_ex(IN void *context, IN boolean use_psk,
 {
     return_status status;
     spdm_context_t *spdm_context;
+    spdm_stop_session_t spdm_stop_session_context;
 
     #if LIBSPDM_ENABLE_CAPABILITY_KEY_EX_CAP
     spdm_session_info_t *session_info;
@@ -245,6 +258,11 @@ return_status libspdm_start_session_ex(IN void *context, IN boolean use_psk,
                    status));
             return status;
         }
+
+        spdm_stop_session_context.spdm_context = spdm_context;
+        spdm_stop_session_context.session_id = *session_id;
+        spdm_stop_session_context.end_session_attributes = 0;
+        init_watchdog(*heartbeat_period, spdm_stop_session_context, libspdm_stop_session);
 
         session_info = libspdm_get_session_info_via_session_id(
             spdm_context, *session_id);
@@ -304,6 +322,11 @@ return_status libspdm_start_session_ex(IN void *context, IN boolean use_psk,
                    status));
             return status;
         }
+
+        spdm_stop_session_context.spdm_context = spdm_context;
+        spdm_stop_session_context.session_id = *session_id;
+        spdm_stop_session_context.end_session_attributes = 0;
+        init_watchdog(*heartbeat_period, spdm_stop_session_context, libspdm_stop_session);
 
         /* send PSK_FINISH only if Responder supports context.*/
         if (spdm_is_capabilities_flag_supported(

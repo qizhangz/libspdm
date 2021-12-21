@@ -387,7 +387,7 @@ return_status libspdm_get_certificate_choose_length(IN void *context,
     do {
         status = try_spdm_get_certificate(spdm_context, slot_id, length,
                           cert_chain_size, cert_chain, NULL, NULL);
-        if (RETURN_NO_RESPONSE != status) {
+        if ((RETURN_NO_RESPONSE != status) && (RETURN_TIMEOUT != status)) {
             return status;
         }
     } while (retry-- != 0);
@@ -435,7 +435,7 @@ return_status libspdm_get_certificate_choose_length_ex(IN void *context,
     do {
         status = try_spdm_get_certificate(spdm_context, slot_id, length,
                           cert_chain_size, cert_chain, trust_anchor, trust_anchor_size);
-        if (RETURN_NO_RESPONSE != status) {
+        if ((RETURN_NO_RESPONSE != status) && (RETURN_TIMEOUT != status)) {
             return status;
         }
     } while (retry-- != 0);

@@ -234,9 +234,10 @@ return_status spdm_get_capabilities(IN spdm_context_t *spdm_context)
     return_status status;
 
     retry = spdm_context->retry_times;
+    spdm_context->crypto_request = FALSE;
     do {
         status = try_spdm_get_capabilities(spdm_context);
-        if (RETURN_NO_RESPONSE != status) {
+        if ((RETURN_NO_RESPONSE != status) && (RETURN_TIMEOUT != status)) {
             return status;
         }
     } while (retry-- != 0);

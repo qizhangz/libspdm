@@ -5,6 +5,7 @@
 **/
 
 #include "internal/libspdm_requester_lib.h"
+#include "hal/library/timelib.h"
 
 #pragma pack(1)
 
@@ -115,7 +116,9 @@ return_status libspdm_heartbeat(IN void *context, IN uint32_t session_id)
     retry = spdm_context->retry_times;
     do {
         status = try_spdm_heartbeat(spdm_context, session_id);
-        if (RETURN_NO_RESPONSE != status) {
+        DEBUG((DEBUG_INFO, "libspdm_heartbeat -> reset_watchdog - %p\n", status));
+        reset_watchdog();
+        if ((RETURN_NO_RESPONSE != status) && (RETURN_TIMEOUT != status)) {
             return status;
         }
     } while (retry-- != 0);

@@ -128,7 +128,7 @@ return_status spdm_send_receive_end_session(IN spdm_context_t *spdm_context,
     do {
         status = try_spdm_send_receive_end_session(
             spdm_context, session_id, end_session_attributes);
-        if (RETURN_NO_RESPONSE != status) {
+        if ((RETURN_NO_RESPONSE != status) && (RETURN_TIMEOUT != status)) {
             return status;
         }
     } while (retry-- != 0);

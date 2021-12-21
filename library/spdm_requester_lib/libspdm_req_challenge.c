@@ -331,7 +331,7 @@ return_status libspdm_challenge(IN void *context, IN uint8_t slot_id,
         status = try_spdm_challenge(spdm_context, slot_id,
                         measurement_hash_type,
                         measurement_hash, slot_mask, NULL, NULL, NULL);
-        if (RETURN_NO_RESPONSE != status) {
+        if ((RETURN_NO_RESPONSE != status) && (RETURN_TIMEOUT != status)) {
             return status;
         }
     } while (retry-- != 0);
@@ -382,7 +382,7 @@ return_status libspdm_challenge_ex(IN void *context, IN uint8_t slot_id,
                         slot_mask,
                         requester_nonce_in,
                         requester_nonce, responder_nonce);
-        if (RETURN_NO_RESPONSE != status) {
+        if ((RETURN_NO_RESPONSE != status) && (RETURN_TIMEOUT != status)) {
             return status;
         }
     } while (retry-- != 0);

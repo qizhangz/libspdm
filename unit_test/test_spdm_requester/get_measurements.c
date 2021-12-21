@@ -7,6 +7,7 @@
 #include "spdm_unit_test.h"
 #include "internal/libspdm_requester_lib.h"
 #include "internal/libspdm_secured_message_lib.h"
+#include "hal/library/timelib.h"
 
 #if LIBSPDM_ENABLE_CAPABILITY_MEAS_CAP
 
@@ -75,6 +76,7 @@ return_status spdm_requester_get_measurements_test_send_message(
     uint8_t app_message[LIBSPDM_MAX_MESSAGE_BUFFER_SIZE];
     uintn app_message_size;
 
+    libspdm_settimer(timeout);
     spdm_test_context = get_spdm_test_context();
     header_size = sizeof(test_message_header_t);
     switch (spdm_test_context->case_id) {
@@ -409,6 +411,9 @@ return_status spdm_requester_get_measurements_test_receive_message(
     return_status status;
 
     spdm_test_context = get_spdm_test_context();
+    if(libspdm_checktimer(timeout)) {
+        return RETURN_TIMEOUT;
+    }
     switch (spdm_test_context->case_id) {
     case 0x1:
         return RETURN_DEVICE_ERROR;
