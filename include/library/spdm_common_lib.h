@@ -735,6 +735,23 @@ boolean libspdm_calculate_th_for_exchange(
     IN void *spdm_context, IN void *spdm_session_info,
     IN uint8_t *cert_chain_buffer, OPTIONAL IN uintn cert_chain_buffer_size,
     OPTIONAL IN OUT uintn *th_data_buffer_size, OUT void *th_data_buffer);
+
+/*
+  This function calculates current TH data with message A and message K.
+
+  @param  spdm_context                  A pointer to the SPDM context.
+  @param  session_info                  The SPDM session ID.
+  @param  cert_chain_buffer_hash        Certitiface chain buffer hash.
+  @param  cert_chain_buffer_hash_size   size in bytes of the certitiface chain buffer hash.
+  @param  th_data_buffer_size           size in bytes of the th_data_buffer
+  @param  th_data_buffer                The buffer to store the th_data_buffer
+
+  @retval RETURN_SUCCESS  current TH data is calculated.
+*/
+boolean libspdm_calculate_th_for_exchange2(
+    IN void *context, IN void *spdm_session_info, IN uint8_t *cert_chain_buffer_hash,
+    OPTIONAL IN uintn cert_chain_buffer_hash_size,
+    OPTIONAL IN OUT uintn *th_data_buffer_size, OUT void *th_data_buffer);
 #else
 /*
   This function calculates current TH hash with message A and message K.
@@ -786,6 +803,29 @@ boolean libspdm_calculate_th_for_finish(IN void *spdm_context,
                      OPTIONAL IN uintn cert_chain_buffer_size,
                      OPTIONAL IN uint8_t *mut_cert_chain_buffer,
                      OPTIONAL IN uintn mut_cert_chain_buffer_size,
+                     OPTIONAL IN OUT uintn *th_data_buffer_size,
+                     OUT void *th_data_buffer);
+
+/*
+  This function calculates current TH data with message A, message K and message F.
+
+  @param  spdm_context                  A pointer to the SPDM context.
+  @param  session_info                  The SPDM session ID.
+  @param  cert_chain_buffer_hash        Certitiface chain buffer hash.
+  @param  cert_chain_buffer_hash_size   size in bytes of the certitiface chain buffer hash.
+  @param  mut_cert_chain_buffer_hash        Certitiface chain buffer hash in mutual authentication.
+  @param  mut_cert_chain_buffer_hash_size   size in bytes of the certitiface chain buffer hash in mutual authentication.
+  @param  th_data_buffer_size             size in bytes of the th_data_buffer
+  @param  th_data_buffer                 The buffer to store the th_data_buffer
+
+  @retval RETURN_SUCCESS  current TH data is calculated.
+*/
+boolean libspdm_calculate_th_for_finish2(IN void *context,
+                     IN void *spdm_session_info,
+                     IN uint8_t *cert_chain_buffer_hash,
+                     OPTIONAL IN uintn cert_chain_buffer_hash_size,
+                     OPTIONAL IN uint8_t *mut_cert_chain_buffer_hash,
+                     OPTIONAL IN uintn mut_cert_chain_buffer_hash_size,
                      OPTIONAL IN OUT uintn *th_data_buffer_size,
                      OUT void *th_data_buffer);
 #else
@@ -892,6 +932,18 @@ boolean libspdm_get_peer_cert_chain_buffer(IN void *spdm_context,
 boolean libspdm_get_peer_cert_chain_data(IN void *spdm_context,
                       OUT void **cert_chain_data,
                       OUT uintn *cert_chain_data_size);
+
+boolean libspdm_get_public_key_from_cert_chain(IN void *context,
+                      IN uint32_t algo,
+                      IN uint8_t *cert_chain_data,
+                      IN uintn cert_chain_data_size,
+                      OUT void **public_key);
+
+boolean libspdm_get_public_key_from_cert_chain2(IN void *context,
+                      IN uint16_t algo,
+                      IN uint8_t *cert_chain_data,
+                      IN uintn cert_chain_data_size,
+                      OUT void **public_key);
 
 /**
   This function returns local used certificate chain buffer including spdm_cert_chain_t header.

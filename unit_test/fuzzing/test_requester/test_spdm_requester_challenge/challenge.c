@@ -68,10 +68,12 @@ void test_spdm_requester_challenge(void **State)
 
     spdm_context->connection_info.version.major_version = 1;
     spdm_context->connection_info.version.minor_version = 1;
+#if 0
     spdm_context->connection_info.peer_used_cert_chain_buffer_size =
         data_size;
     copy_mem(spdm_context->connection_info.peer_used_cert_chain_buffer,
          data, data_size);
+#endif
 
     zero_mem(measurement_hash, sizeof(measurement_hash));
     libspdm_challenge(spdm_context, 0,

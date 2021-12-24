@@ -28,7 +28,7 @@
 #define LIBSPDM_MAX_CONNECTION_STATE_CALLBACK_NUM 4
 
 /* If cache transcript data or transcript hash*/
-#define LIBSPDM_RECORD_TRANSCRIPT_DATA_SUPPORT 0
+#define LIBSPDM_RECORD_TRANSCRIPT_DATA_SUPPORT 1
 
 
 /* Crypto Configuation*/

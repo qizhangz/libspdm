@@ -187,6 +187,7 @@ return_status spdm_process_encap_response_certificate(
         }
     }
 
+#if 0
     spdm_context->connection_info.peer_used_cert_chain_buffer_size =
         get_managed_buffer_size(
             &spdm_context->encap_context.certificate_chain_buffer);
@@ -196,6 +197,44 @@ return_status spdm_process_encap_response_certificate(
             &spdm_context->encap_context.certificate_chain_buffer),
         get_managed_buffer_size(
             &spdm_context->encap_context.certificate_chain_buffer));
+
+    DEBUG((DEBUG_INFO, "spdm_process_encap_response_certificate: peer_used_cert_chain_buffer_size (0x%x)\n", spdm_context->connection_info.peer_used_cert_chain_buffer_size));
+    internal_dump_data(spdm_context->connection_info.peer_used_cert_chain_buffer,
+        spdm_context->connection_info.peer_used_cert_chain_buffer_size);
+    DEBUG((DEBUG_INFO, "\n"));
+    DEBUG((DEBUG_INFO, ">>>> spdm_process_encap_response_certificate: base_asym_algo: %d, req_base_asym_alg %d\n",
+        spdm_context->connection_info.algorithm.base_asym_algo,
+        spdm_context->connection_info.algorithm.req_base_asym_alg));
+#endif
+
+#if 1
+    libspdm_hash_all(
+        spdm_context->connection_info.algorithm.base_hash_algo,
+        get_managed_buffer(
+            &spdm_context->encap_context.certificate_chain_buffer),
+        get_managed_buffer_size(
+            &spdm_context->encap_context.certificate_chain_buffer),
+        spdm_context->connection_info.peer_used_cert_chain_buffer_hash);
+
+    spdm_context->connection_info.peer_used_cert_chain_buffer_hash_size =
+        libspdm_get_hash_size(spdm_context->connection_info.algorithm.base_hash_algo);
+
+    libspdm_get_public_key_from_cert_chain(spdm_context,
+        spdm_context->connection_info.algorithm.base_asym_algo,
+        get_managed_buffer(
+            &spdm_context->encap_context.certificate_chain_buffer),
+        get_managed_buffer_size(
+            &spdm_context->encap_context.certificate_chain_buffer),
+        &spdm_context->connection_info.public_key_with_base_asym_algo);
+
+    libspdm_get_public_key_from_cert_chain(spdm_context,
+        spdm_context->connection_info.algorithm.req_base_asym_alg,
+        get_managed_buffer(
+            &spdm_context->encap_context.certificate_chain_buffer),
+        get_managed_buffer_size(
+            &spdm_context->encap_context.certificate_chain_buffer),
+        &spdm_context->connection_info.public_key_with_req_base_asym_alg);
+#endif
 
     spdm_context->encap_context.error_state = LIBSPDM_STATUS_SUCCESS;
 

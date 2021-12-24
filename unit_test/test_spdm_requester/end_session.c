@@ -505,10 +505,12 @@ void test_spdm_requester_end_session_case1(void **state)
         m_use_dhe_algo;
     spdm_context->connection_info.algorithm.aead_cipher_suite =
         m_use_aead_algo;
+#if 0
     spdm_context->connection_info.peer_used_cert_chain_buffer_size =
         data_size;
     copy_mem(spdm_context->connection_info.peer_used_cert_chain_buffer,
          data, data_size);
+#endif
     zero_mem(m_local_psk_hint, 32);
     copy_mem(&m_local_psk_hint[0], TEST_PSK_HINT_STRING,
          sizeof(TEST_PSK_HINT_STRING));
@@ -569,10 +571,12 @@ void test_spdm_requester_end_session_case2(void **state)
         m_use_dhe_algo;
     spdm_context->connection_info.algorithm.aead_cipher_suite =
         m_use_aead_algo;
+#if 0
     spdm_context->connection_info.peer_used_cert_chain_buffer_size =
         data_size;
     copy_mem(spdm_context->connection_info.peer_used_cert_chain_buffer,
          data, data_size);
+#endif
     zero_mem(m_local_psk_hint, 32);
     copy_mem(&m_local_psk_hint[0], TEST_PSK_HINT_STRING,
          sizeof(TEST_PSK_HINT_STRING));
@@ -660,10 +664,12 @@ void test_spdm_requester_end_session_case3(void **state)
         m_use_dhe_algo;
     spdm_context->connection_info.algorithm.aead_cipher_suite =
         m_use_aead_algo;
+#if 0
     spdm_context->connection_info.peer_used_cert_chain_buffer_size =
         data_size;
     copy_mem(spdm_context->connection_info.peer_used_cert_chain_buffer,
          data, data_size);
+#endif
     zero_mem(m_local_psk_hint, 32);
     copy_mem(&m_local_psk_hint[0], TEST_PSK_HINT_STRING,
          sizeof(TEST_PSK_HINT_STRING));
@@ -747,10 +753,12 @@ void test_spdm_requester_end_session_case4(void **state)
         m_use_dhe_algo;
     spdm_context->connection_info.algorithm.aead_cipher_suite =
         m_use_aead_algo;
+#if 0
     spdm_context->connection_info.peer_used_cert_chain_buffer_size =
         data_size;
     copy_mem(spdm_context->connection_info.peer_used_cert_chain_buffer,
          data, data_size);
+#endif
     zero_mem(m_local_psk_hint, 32);
     copy_mem(&m_local_psk_hint[0], TEST_PSK_HINT_STRING,
          sizeof(TEST_PSK_HINT_STRING));
@@ -834,10 +842,12 @@ void test_spdm_requester_end_session_case5(void **state)
         m_use_dhe_algo;
     spdm_context->connection_info.algorithm.aead_cipher_suite =
         m_use_aead_algo;
+#if 0
     spdm_context->connection_info.peer_used_cert_chain_buffer_size =
         data_size;
     copy_mem(spdm_context->connection_info.peer_used_cert_chain_buffer,
          data, data_size);
+#endif
     zero_mem(m_local_psk_hint, 32);
     copy_mem(&m_local_psk_hint[0], TEST_PSK_HINT_STRING,
          sizeof(TEST_PSK_HINT_STRING));
@@ -921,10 +931,12 @@ void test_spdm_requester_end_session_case6(void **state)
         m_use_dhe_algo;
     spdm_context->connection_info.algorithm.aead_cipher_suite =
         m_use_aead_algo;
+#if 0
     spdm_context->connection_info.peer_used_cert_chain_buffer_size =
         data_size;
     copy_mem(spdm_context->connection_info.peer_used_cert_chain_buffer,
          data, data_size);
+#endif
     zero_mem(m_local_psk_hint, 32);
     copy_mem(&m_local_psk_hint[0], TEST_PSK_HINT_STRING,
          sizeof(TEST_PSK_HINT_STRING));
@@ -1012,10 +1024,12 @@ void test_spdm_requester_end_session_case7(void **state)
         m_use_dhe_algo;
     spdm_context->connection_info.algorithm.aead_cipher_suite =
         m_use_aead_algo;
+#if 0
     spdm_context->connection_info.peer_used_cert_chain_buffer_size =
         data_size;
     copy_mem(spdm_context->connection_info.peer_used_cert_chain_buffer,
          data, data_size);
+#endif
     zero_mem(m_local_psk_hint, 32);
     copy_mem(&m_local_psk_hint[0], TEST_PSK_HINT_STRING,
          sizeof(TEST_PSK_HINT_STRING));
@@ -1101,10 +1115,12 @@ void test_spdm_requester_end_session_case8(void **state)
         m_use_dhe_algo;
     spdm_context->connection_info.algorithm.aead_cipher_suite =
         m_use_aead_algo;
+#if 0
     spdm_context->connection_info.peer_used_cert_chain_buffer_size =
         data_size;
     copy_mem(spdm_context->connection_info.peer_used_cert_chain_buffer,
          data, data_size);
+#endif
     zero_mem(m_local_psk_hint, 32);
     copy_mem(&m_local_psk_hint[0], TEST_PSK_HINT_STRING,
          sizeof(TEST_PSK_HINT_STRING));
@@ -1188,10 +1204,12 @@ void test_spdm_requester_end_session_case9(void **state)
         m_use_dhe_algo;
     spdm_context->connection_info.algorithm.aead_cipher_suite =
         m_use_aead_algo;
+#if 0
     spdm_context->connection_info.peer_used_cert_chain_buffer_size =
         data_size;
     copy_mem(spdm_context->connection_info.peer_used_cert_chain_buffer,
          data, data_size);
+#endif
     zero_mem(m_local_psk_hint, 32);
     copy_mem(&m_local_psk_hint[0], TEST_PSK_HINT_STRING,
          sizeof(TEST_PSK_HINT_STRING));
@@ -1264,8 +1282,10 @@ void test_spdm_requester_end_session_case10(void **state) {
   spdm_context->connection_info.algorithm.base_asym_algo = m_use_asym_algo;
   spdm_context->connection_info.algorithm.dhe_named_group = m_use_dhe_algo;
   spdm_context->connection_info.algorithm.aead_cipher_suite = m_use_aead_algo;
+#if 0
   spdm_context->connection_info.peer_used_cert_chain_buffer_size = data_size;
   copy_mem (spdm_context->connection_info.peer_used_cert_chain_buffer, data, data_size);
+#endif
   zero_mem (m_local_psk_hint, 32);
   copy_mem (&m_local_psk_hint[0], TEST_PSK_HINT_STRING, sizeof(TEST_PSK_HINT_STRING));
   spdm_context->local_context.psk_hint_size = sizeof(TEST_PSK_HINT_STRING);
@@ -1346,10 +1366,12 @@ void test_spdm_requester_end_session_case11(void **state)
         m_use_dhe_algo;
     spdm_context->connection_info.algorithm.aead_cipher_suite =
         m_use_aead_algo;
+#if 0
     spdm_context->connection_info.peer_used_cert_chain_buffer_size =
         data_size;
     copy_mem(spdm_context->connection_info.peer_used_cert_chain_buffer,
          data, data_size);
+#endif
     zero_mem(m_local_psk_hint, 32);
     copy_mem(&m_local_psk_hint[0], TEST_PSK_HINT_STRING,
          sizeof(TEST_PSK_HINT_STRING));
