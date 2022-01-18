@@ -225,6 +225,7 @@ return_status spdm_encapsulated_request(IN spdm_context_t *spdm_context,
 #endif /* LIBSPDM_ENABLE_CAPABILITY_CERT_CAP*/
 
     } else {
+        spdm_context->crypto_request = TRUE;
         spdm_get_encapsulated_request_request = (void *)request;
         spdm_get_encapsulated_request_request->header.spdm_version =
             spdm_get_connection_version (spdm_context);
@@ -240,7 +241,9 @@ return_status spdm_encapsulated_request(IN spdm_context_t *spdm_context,
             spdm_context, session_id, spdm_request_size,
             spdm_get_encapsulated_request_request);
 
-        if (RETURN_ERROR(status)) {
+        if (status == RETURN_TIMEOUT) {
+            return status;
+        } else if (RETURN_ERROR(status)) {
             return RETURN_DEVICE_ERROR;
         }
 
@@ -250,7 +253,9 @@ return_status spdm_encapsulated_request(IN spdm_context_t *spdm_context,
         status = spdm_receive_spdm_response(
             spdm_context, session_id, &spdm_response_size,
             spdm_encapsulated_request_response);
-        if (RETURN_ERROR(status)) {
+        if (status == RETURN_TIMEOUT) {
+            return status;
+        } else if (RETURN_ERROR(status)) {
             return RETURN_DEVICE_ERROR;
         }
         if (spdm_encapsulated_request_response->header
@@ -281,7 +286,8 @@ return_status spdm_encapsulated_request(IN spdm_context_t *spdm_context,
     while (TRUE) {
         
         /* Process request*/
-        
+
+        spdm_context->crypto_request = TRUE;
         spdm_deliver_encapsulated_response_request = (void *)request;
         spdm_deliver_encapsulated_response_request->header.spdm_version =
             spdm_get_connection_version (spdm_context);
@@ -312,7 +318,9 @@ return_status spdm_encapsulated_request(IN spdm_context_t *spdm_context,
         status = spdm_send_spdm_request(
             spdm_context, session_id, spdm_request_size,
             spdm_deliver_encapsulated_response_request);
-        if (RETURN_ERROR(status)) {
+        if (status == RETURN_TIMEOUT) {
+            return status;
+        } else if (RETURN_ERROR(status)) {
             return RETURN_DEVICE_ERROR;
         }
 
@@ -322,7 +330,9 @@ return_status spdm_encapsulated_request(IN spdm_context_t *spdm_context,
         status = spdm_receive_spdm_response(
             spdm_context, session_id, &spdm_response_size,
             spdm_encapsulated_response_ack_response);
-        if (RETURN_ERROR(status)) {
+        if (status == RETURN_TIMEOUT) {
+            return status;
+        } else if (RETURN_ERROR(status)) {
             return RETURN_DEVICE_ERROR;
         }
         if (spdm_encapsulated_response_ack_response->header

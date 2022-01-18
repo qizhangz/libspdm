@@ -5,6 +5,7 @@
 **/
 
 #include "internal/libspdm_requester_lib.h"
+#include "hal/library/platform_lib.h"
 
 /**
   This function sends RESPOND_IF_READY and receives an expected SPDM response.
@@ -33,13 +34,16 @@ return_status spdm_requester_respond_if_ready(IN spdm_context_t *spdm_context,
 
     spdm_response = response;
 
+    spdm_context->crypto_request = TRUE;
     spdm_request.header.spdm_version = spdm_get_connection_version (spdm_context);
     spdm_request.header.request_response_code = SPDM_RESPOND_IF_READY;
     spdm_request.header.param1 = spdm_context->error_data.request_code;
     spdm_request.header.param2 = spdm_context->error_data.token;
     status = spdm_send_spdm_request(spdm_context, session_id,
                     sizeof(spdm_request), &spdm_request);
-    if (RETURN_ERROR(status)) {
+    if (status == RETURN_TIMEOUT) {
+        return status;
+    } else if (RETURN_ERROR(status)) {
         return RETURN_DEVICE_ERROR;
     }
 
@@ -47,7 +51,9 @@ return_status spdm_requester_respond_if_ready(IN spdm_context_t *spdm_context,
     zero_mem(response, expected_response_size);
     status = spdm_receive_spdm_response(spdm_context, session_id,
                         response_size, response);
-    if (RETURN_ERROR(status)) {
+    if (status == RETURN_TIMEOUT) {
+        return status;
+    } else if (RETURN_ERROR(status)) {
         return RETURN_DEVICE_ERROR;
     }
     if (*response_size < sizeof(spdm_message_header_t)) {
@@ -148,6 +154,7 @@ return_status spdm_handle_response_not_ready(IN spdm_context_t *spdm_context,
     spdm_context->error_data.token = extend_error_data->token;
     spdm_context->error_data.rd_tm = extend_error_data->rd_tm;
 
+    libspdm_sleep((2 << extend_error_data->rd_exponent)/1000);
     return spdm_requester_respond_if_ready(spdm_context, session_id,
                            response_size, response,
                            expected_response_code,

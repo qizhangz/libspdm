@@ -66,7 +66,9 @@ return_status try_spdm_heartbeat(IN void *context, IN uint32_t session_id)
     spdm_request.header.param2 = 0;
     status = spdm_send_spdm_request(spdm_context, &session_id,
                     sizeof(spdm_request), &spdm_request);
-    if (RETURN_ERROR(status)) {
+    if (status == RETURN_TIMEOUT) {
+        return status;
+    } else if (RETURN_ERROR(status)) {
         return RETURN_DEVICE_ERROR;
     }
 
@@ -77,7 +79,9 @@ return_status try_spdm_heartbeat(IN void *context, IN uint32_t session_id)
     zero_mem(&spdm_response, sizeof(spdm_response));
     status = spdm_receive_spdm_response(
         spdm_context, &session_id, &spdm_response_size, &spdm_response);
-    if (RETURN_ERROR(status)) {
+    if (status == RETURN_TIMEOUT) {
+        return status;
+    } else if (RETURN_ERROR(status)) {
         return RETURN_DEVICE_ERROR;
     }
     if (spdm_response_size < sizeof(spdm_message_header_t)) {
@@ -112,6 +116,7 @@ return_status libspdm_heartbeat(IN void *context, IN uint32_t session_id)
     spdm_context_t *spdm_context;
 
     spdm_context = context;
+    spdm_context->crypto_request = TRUE;
     retry = spdm_context->retry_times;
     do {
         status = try_spdm_heartbeat(spdm_context, session_id);

@@ -176,7 +176,9 @@ return_status try_spdm_get_measurement(IN void *context, IN uint32_t *session_id
     }
     status = spdm_send_spdm_request(spdm_context, session_id,
                     spdm_request_size, &spdm_request);
-    if (RETURN_ERROR(status)) {
+    if (status == RETURN_TIMEOUT) {
+        return status;
+    } else if (RETURN_ERROR(status)) {
         return RETURN_DEVICE_ERROR;
     }
 
@@ -184,7 +186,9 @@ return_status try_spdm_get_measurement(IN void *context, IN uint32_t *session_id
     zero_mem(&spdm_response, sizeof(spdm_response));
     status = spdm_receive_spdm_response(
         spdm_context, session_id, &spdm_response_size, &spdm_response);
-    if (RETURN_ERROR(status)) {
+    if (status == RETURN_TIMEOUT) {
+        return status;
+    } else if (RETURN_ERROR(status)) {
         return RETURN_DEVICE_ERROR;
     }
     if (spdm_response_size < sizeof(spdm_message_header_t)) {
@@ -507,6 +511,7 @@ return_status libspdm_get_measurement(IN void *context, IN uint32_t *session_id,
     return_status status;
 
     spdm_context = context;
+    spdm_context->crypto_request = TRUE;
     retry = spdm_context->retry_times;
     do {
         status = try_spdm_get_measurement(
@@ -563,6 +568,7 @@ return_status libspdm_get_measurement_ex(IN void *context, IN uint32_t *session_
     return_status status;
 
     spdm_context = context;
+    spdm_context->crypto_request = TRUE;
     retry = spdm_context->retry_times;
     do {
         status = try_spdm_get_measurement(

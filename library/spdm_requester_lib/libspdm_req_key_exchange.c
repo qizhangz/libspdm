@@ -174,7 +174,11 @@ return_status try_spdm_send_receive_key_exchange(
         libspdm_secured_message_dhe_free(
             spdm_context->connection_info.algorithm.dhe_named_group,
             dhe_context);
-        return RETURN_DEVICE_ERROR;
+        if (status == RETURN_TIMEOUT) {
+            return status;
+        } else {
+            return RETURN_DEVICE_ERROR;
+        }
     }
 
     spdm_response_size = sizeof(spdm_response);
@@ -185,7 +189,11 @@ return_status try_spdm_send_receive_key_exchange(
         libspdm_secured_message_dhe_free(
             spdm_context->connection_info.algorithm.dhe_named_group,
             dhe_context);
-        return RETURN_DEVICE_ERROR;
+        if (status == RETURN_TIMEOUT) {
+            return status;
+        } else {
+            return RETURN_DEVICE_ERROR;
+        }
     }
     if (spdm_response_size < sizeof(spdm_message_header_t)) {
         libspdm_secured_message_dhe_free(
@@ -512,6 +520,7 @@ return_status spdm_send_receive_key_exchange(
     uintn retry;
     return_status status;
 
+    spdm_context->crypto_request = TRUE;
     retry = spdm_context->retry_times;
     do {
         status = try_spdm_send_receive_key_exchange(
@@ -555,6 +564,7 @@ return_status spdm_send_receive_key_exchange_ex(
     uintn retry;
     return_status status;
 
+    spdm_context->crypto_request = TRUE;
     retry = spdm_context->retry_times;
     do {
         status = try_spdm_send_receive_key_exchange(
