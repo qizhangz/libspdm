@@ -1045,10 +1045,10 @@ bool libspdm_psk_handshake_secret_hkdf_expand(
     bool result;
     uint8_t handshake_secret[64];
 
-    if ((psk_hint == NULL) && (psk_hint_size == 0)) {
+    if (psk_hint_size == 0) {
         psk = LIBSPDM_TEST_PSK_DATA_STRING;
         psk_size = sizeof(LIBSPDM_TEST_PSK_DATA_STRING);
-    } else if ((psk_hint != NULL) && (psk_hint_size != 0) &&
+    } else if ((psk_hint_size != 0) &&
                (strcmp((const char *)psk_hint, LIBSPDM_TEST_PSK_HINT_STRING) ==
                 0) &&
                (psk_hint_size == sizeof(LIBSPDM_TEST_PSK_HINT_STRING))) {
@@ -1107,10 +1107,10 @@ bool libspdm_psk_master_secret_hkdf_expand(
     uint8_t salt1[64];
     uint8_t master_secret[64];
 
-    if ((psk_hint == NULL) && (psk_hint_size == 0)) {
+    if (psk_hint_size == 0) {
         psk = LIBSPDM_TEST_PSK_DATA_STRING;
         psk_size = sizeof(LIBSPDM_TEST_PSK_DATA_STRING);
-    } else if ((psk_hint != NULL) && (psk_hint_size != 0) &&
+    } else if ((psk_hint_size != 0) &&
                (strcmp((const char *)psk_hint, LIBSPDM_TEST_PSK_HINT_STRING) ==
                 0) &&
                (psk_hint_size == sizeof(LIBSPDM_TEST_PSK_HINT_STRING))) {
