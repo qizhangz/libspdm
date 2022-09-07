@@ -88,10 +88,15 @@ libspdm_return_t libspdm_start_session(void *context, bool use_psk,
 
     if (!use_psk) {
     #if LIBSPDM_ENABLE_CAPABILITY_KEY_EX_CAP
+        LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO,
+                       "QIZ: >>>>>>>>>>>>>>> libspdm_start_session - libspdm_send_receive_key_exchange start\n"));
         status = libspdm_send_receive_key_exchange(
             spdm_context, measurement_hash_type, slot_id, session_policy,
             session_id, heartbeat_period, &req_slot_id_param,
             measurement_hash);
+        LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO,
+                       "QIZ: >>>>>>>>>>>>>>> libspdm_start_session - libspdm_send_receive_key_exchange - %p\n",
+                       status));
         if (LIBSPDM_STATUS_IS_ERROR(status)) {
             LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO,
                            "libspdm_start_session - libspdm_send_receive_key_exchange - %p\n",
@@ -113,12 +118,14 @@ libspdm_return_t libspdm_start_session(void *context, bool use_psk,
             break;
         case SPDM_KEY_EXCHANGE_RESPONSE_MUT_AUTH_REQUESTED_WITH_ENCAP_REQUEST:
         case SPDM_KEY_EXCHANGE_RESPONSE_MUT_AUTH_REQUESTED_WITH_GET_DIGESTS:
+            LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO,
+                           ">>>>>>>>>>>>> libspdm_start_session - libspdm_encapsulated_request start\n"));
             status = libspdm_encapsulated_request(
                 spdm_context, session_id,
                 session_info->mut_auth_requested,
                 &req_slot_id_param);
             LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO,
-                           "libspdm_start_session - libspdm_encapsulated_request - %p\n",
+                           ">>>>>>>>>>>>>> libspdm_start_session - libspdm_encapsulated_request - %p\n",
                            status));
             if (LIBSPDM_STATUS_IS_ERROR(status)) {
                 return status;
@@ -134,6 +141,8 @@ libspdm_return_t libspdm_start_session(void *context, bool use_psk,
         if (req_slot_id_param == 0xF) {
             req_slot_id_param = 0xFF;
         }
+        LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO,
+                       ">>>>>>>>>>>>> libspdm_start_session - libspdm_send_receive_finish start\n"));
         status = libspdm_send_receive_finish(spdm_context, *session_id,
                                              req_slot_id_param);
         LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO,
@@ -145,13 +154,15 @@ libspdm_return_t libspdm_start_session(void *context, bool use_psk,
     #endif /* LIBSPDM_ENABLE_CAPABILITY_KEY_EX_CAP*/
     } else {
     #if LIBSPDM_ENABLE_CAPABILITY_PSK_EX_CAP
+        LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO,
+                       ">>>>>>> QIZ: libspdm_start_session - libspdm_send_receive_psk_exchange\n"));
         status = libspdm_send_receive_psk_exchange(
             spdm_context, measurement_hash_type, session_policy, session_id,
             heartbeat_period, measurement_hash);
+        LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO,
+                       ">>>>>>> QIZ: libspdm_start_session - libspdm_send_receive_psk_exchange - %p\n",
+                      status));
         if (LIBSPDM_STATUS_IS_ERROR(status)) {
-            LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO,
-                           "libspdm_start_session - libspdm_send_receive_psk_exchange - %p\n",
-                           status));
             return status;
         }
 
@@ -159,10 +170,12 @@ libspdm_return_t libspdm_start_session(void *context, bool use_psk,
         if (libspdm_is_capabilities_flag_supported(
                 spdm_context, true, 0,
                 SPDM_GET_CAPABILITIES_RESPONSE_FLAGS_PSK_CAP_RESPONDER_WITH_CONTEXT)) {
+            LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO,
+                           ">>>>>>> QIZ: libspdm_start_session - libspdm_send_receive_psk_finish\n"));
             status = libspdm_send_receive_psk_finish(spdm_context,
                                                      *session_id);
             LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO,
-                           "libspdm_start_session - libspdm_send_receive_psk_finish - %p\n",
+                           ">>>>>>> QIZ: libspdm_start_session - libspdm_send_receive_psk_finish - %p\n",
                            status));
         }
     #endif /* LIBSPDM_ENABLE_CAPABILITY_PSK_EX_CAP*/

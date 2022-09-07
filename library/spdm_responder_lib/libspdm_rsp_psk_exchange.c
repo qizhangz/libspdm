@@ -348,7 +348,7 @@ libspdm_return_t libspdm_get_response_psk_exchange(void *context,
             SPDM_GET_CAPABILITIES_RESPONSE_FLAGS_PSK_CAP_RESPONDER_WITH_CONTEXT)) {
         /* No need to receive PSK_FINISH, enter application phase directly.*/
 
-        LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_generate_session_data_key[%x]\n",
+        LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_get_response_psk_exchange->libspdm_generate_session_data_key[%x]\n",
                        session_id));
         result = libspdm_calculate_th2_hash(spdm_context, session_info,
                                             false, th2_hash_data);

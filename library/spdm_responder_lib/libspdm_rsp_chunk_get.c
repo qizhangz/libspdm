@@ -53,7 +53,12 @@ libspdm_return_t libspdm_get_response_chunk_get(
             response_size, response);
     }
 
-    if (spdm_context->response_state != LIBSPDM_RESPONSE_STATE_NORMAL) {
+    LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "QIZ: libspdm_get_response_chunk_get: large_message_size 0x%x\n",
+                   get_info->large_message_size));
+    libspdm_internal_dump_hex(get_info->large_message, get_info->large_message_size);
+
+    if ((spdm_context->response_state != LIBSPDM_RESPONSE_STATE_NORMAL) &&
+        (spdm_context->response_state != LIBSPDM_RESPONSE_STATE_PROCESSING_ENCAP)) {
         return libspdm_responder_handle_response_state(
             spdm_context,
             spdm_request->header.request_response_code,

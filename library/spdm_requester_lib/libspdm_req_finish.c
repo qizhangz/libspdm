@@ -293,6 +293,7 @@ static libspdm_return_t libspdm_try_send_receive_finish(libspdm_context_t *spdm_
         goto receive_done;
     }
 
+    LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, ">>>>>>> QIZ: libspdm_try_send_receive_finish->LIBSPDM_SESSION_STATE_ESTABLISHED\n"));
     libspdm_secured_message_set_session_state(
         session_info->secured_message_context,
         LIBSPDM_SESSION_STATE_ESTABLISHED);

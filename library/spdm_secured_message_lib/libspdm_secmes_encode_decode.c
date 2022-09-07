@@ -72,6 +72,7 @@ libspdm_return_t libspdm_encode_secured_message(
     aead_key_size = secured_message_context->aead_key_size;
     aead_iv_size = secured_message_context->aead_iv_size;
 
+    LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "QIZ: >>>>> libspdm_encode_secured_message: session_state 0x%x, is_requester %d\n", session_state, is_requester));
     switch (session_state) {
     case LIBSPDM_SESSION_STATE_HANDSHAKING:
         if (is_requester) {
@@ -172,6 +173,7 @@ libspdm_return_t libspdm_encode_secured_message(
                          sequence_num_in_header_size +
                          sizeof(spdm_secured_message_a_data_header2_t);
 
+    LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "QIZ: >>>>> libspdm_encode_secured_message: session_type 0x%x\n", session_type));
     switch (session_type) {
     case LIBSPDM_SESSION_TYPE_ENC_MAC:
         max_rand_count = spdm_secured_message_callbacks
@@ -235,12 +237,17 @@ libspdm_return_t libspdm_encode_secured_message(
         tag = (uint8_t *)record_header1 + record_header_size +
               cipher_text_size;
 
+        LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "QIZ: >>>>> libspdm_encode_secured_message: key\n"));
+        libspdm_internal_dump_hex(key, aead_key_size);
+        LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "QIZ: >>>>> libspdm_encode_secured_message: salt\n"));
+        libspdm_internal_dump_hex(salt, aead_iv_size);
         result = libspdm_aead_encryption(
             secured_message_context->secured_message_version,
             secured_message_context->aead_cipher_suite, key,
             aead_key_size, salt, aead_iv_size, (uint8_t *)a_data,
             record_header_size, dec_msg, cipher_text_size, tag,
             aead_tag_size, enc_msg, &cipher_text_size);
+        LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "QIZ: >>>>> libspdm_encode_secured_message->libspdm_aead_encryption: result %d\n", result));
         break;
 
     case LIBSPDM_SESSION_TYPE_MAC_ONLY:
@@ -274,12 +281,17 @@ libspdm_return_t libspdm_encode_secured_message(
         tag = (uint8_t *)record_header1 + record_header_size +
               app_message_size;
 
+        LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "QIZ: >>>>> libspdm_encode_secured_message: key\n"));
+        libspdm_internal_dump_hex(key, aead_key_size);
+        LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "QIZ: >>>>> libspdm_encode_secured_message: salt\n"));
+        libspdm_internal_dump_hex(salt, aead_iv_size);
         result = libspdm_aead_encryption(
             secured_message_context->secured_message_version,
             secured_message_context->aead_cipher_suite, key,
             aead_key_size, salt, aead_iv_size, (uint8_t *)a_data,
             record_header_size + app_message_size, NULL, 0, tag,
             aead_tag_size, NULL, NULL);
+        LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "QIZ: >>>>> libspdm_encode_secured_message->libspdm_aead_encryption: result %d\n", result));
         break;
 
     default:
@@ -364,6 +376,9 @@ libspdm_return_t libspdm_decode_secured_message(
     aead_tag_size = secured_message_context->aead_tag_size;
     aead_key_size = secured_message_context->aead_key_size;
     aead_iv_size = secured_message_context->aead_iv_size;
+
+    LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "QIZ: >>>>> libspdm_decode_secured_message: session_state 0x%x, is_requester %d\n", session_state, is_requester));
+    libspdm_internal_dump_hex(secured_message, secured_message_size);
 
     switch (session_state) {
     case LIBSPDM_SESSION_STATE_HANDSHAKING:
@@ -466,6 +481,7 @@ libspdm_return_t libspdm_decode_secured_message(
                          sequence_num_in_header_size +
                          sizeof(spdm_secured_message_a_data_header2_t);
 
+    LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "QIZ: >>>>> libspdm_decode_secured_message: session_type 0x%x\n", session_type));
     switch (session_type) {
     case LIBSPDM_SESSION_TYPE_ENC_MAC:
         if (secured_message_size < record_header_size + aead_tag_size) {
@@ -504,7 +520,13 @@ libspdm_return_t libspdm_decode_secured_message(
         if (cipher_text_size > *app_message_size) {
             return LIBSPDM_STATUS_BUFFER_TOO_SMALL;
         }
+
+        LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "QIZ: >>>>> libspdm_decode_secured_message: secured_message\n"));
+        libspdm_internal_dump_hex(secured_message, secured_message_size);
         libspdm_zero_mem(*app_message, *app_message_size);
+        LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "QIZ: >>>>> libspdm_decode_secured_message: secured_message after libspdm_zero_mem *app_message\n"));
+        libspdm_internal_dump_hex(secured_message, secured_message_size);
+
         enc_msg_header = (void *)(record_header2 + 1);
         a_data = (const uint8_t *)record_header1;
         enc_msg = (const uint8_t *)enc_msg_header;
@@ -512,12 +534,18 @@ libspdm_return_t libspdm_decode_secured_message(
         enc_msg_header = (void *)dec_msg;
         tag = (const uint8_t *)record_header1 + record_header_size +
               cipher_text_size;
+
+        LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "QIZ: >>>>> libspdm_decode_secured_message: key\n"));
+        libspdm_internal_dump_hex(key, aead_key_size);
+        LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "QIZ: >>>>> libspdm_decode_secured_message: salt\n"));
+        libspdm_internal_dump_hex(salt, aead_iv_size);
         result = libspdm_aead_decryption(
             secured_message_context->secured_message_version,
             secured_message_context->aead_cipher_suite, key,
             aead_key_size, salt, aead_iv_size, a_data,
             record_header_size, enc_msg, cipher_text_size, tag,
             aead_tag_size, dec_msg, &cipher_text_size);
+        LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "QIZ: >>>>> libspdm_decode_secured_message->libspdm_aead_decryption: result %d\n", result));
         if (!result) {
 
             /* Try to use backup key to decrypt, because peer may use old key to encrypt error message.
@@ -557,6 +585,7 @@ libspdm_return_t libspdm_decode_secured_message(
 
             libspdm_secured_message_set_last_spdm_error_struct(
                 spdm_secured_message_context, &spdm_error);
+            LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "QIZ: >>>>> libspdm_decode_secured_message->LIBSPDM_STATUS_CRYPTO_ERROR\n"));
             return LIBSPDM_STATUS_CRYPTO_ERROR;
         }
         plain_text_size = enc_msg_header->application_data_length;
@@ -607,6 +636,10 @@ libspdm_return_t libspdm_decode_secured_message(
         a_data = (uint8_t *)record_header1;
         tag = (uint8_t *)record_header1 + record_header_size +
               record_header2->length - aead_tag_size;
+        LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "QIZ: >>>>> libspdm_decode_secured_message: key\n"));
+        libspdm_internal_dump_hex(key, aead_key_size);
+        LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "QIZ: >>>>> libspdm_decode_secured_message: salt\n"));
+        libspdm_internal_dump_hex(salt, aead_iv_size);
         result = libspdm_aead_decryption(
             secured_message_context->secured_message_version,
             secured_message_context->aead_cipher_suite, key,
@@ -614,6 +647,7 @@ libspdm_return_t libspdm_decode_secured_message(
             record_header_size + record_header2->length -
             aead_tag_size,
             NULL, 0, tag, aead_tag_size, NULL, NULL);
+        LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "QIZ: >>>>> libspdm_decode_secured_message->libspdm_aead_decryption: result %d\n", result));
         if (!result) {
 
             /* try to use backup key to decrypt, because peer may use old key to encrypt error message.
@@ -653,6 +687,7 @@ libspdm_return_t libspdm_decode_secured_message(
 
             libspdm_secured_message_set_last_spdm_error_struct(
                 spdm_secured_message_context, &spdm_error);
+            LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "QIZ: >>>>> libspdm_decode_secured_message->LIBSPDM_STATUS_CRYPTO_ERROR\n"));
             return LIBSPDM_STATUS_CRYPTO_ERROR;
         }
 

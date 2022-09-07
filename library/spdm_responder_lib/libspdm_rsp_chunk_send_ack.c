@@ -57,7 +57,10 @@ libspdm_return_t libspdm_get_response_chunk_send(void *context,
             response_size, response);
     }
 
-    if (spdm_context->response_state != LIBSPDM_RESPONSE_STATE_NORMAL) {
+    LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "QIZ: libspdm_get_response_chunk_send response_state - %d\n",
+                   spdm_context->response_state));
+    if ((spdm_context->response_state != LIBSPDM_RESPONSE_STATE_NORMAL) &&
+        (spdm_context->response_state != LIBSPDM_RESPONSE_STATE_PROCESSING_ENCAP)) {
         return libspdm_responder_handle_response_state(
             spdm_context,
             spdm_request->header.request_response_code,
@@ -179,6 +182,8 @@ libspdm_return_t libspdm_get_response_chunk_send(void *context,
 
     LIBSPDM_ASSERT(*response_size >= sizeof(spdm_chunk_send_ack_response_t));
 
+    LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_get_response_chunk_send %d\n", __LINE__));
+
     libspdm_zero_mem(response, *response_size);
     spdm_response = response;
 
@@ -196,6 +201,8 @@ libspdm_return_t libspdm_get_response_chunk_send(void *context,
          * If there is an error after all chunks have been sent by the requester correctly,
          * the responder reflects the error in the ChunkSendAck.ResponseToLargeRequest buffer,
          * and not in the EARLY_ERROR_DETECTED bit. */
+
+        LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "QIZ: Set the EARLY_ERROR_DETECTED bit here\n"));
 
         spdm_response->header.param1
             |= SPDM_CHUNK_SEND_ACK_RESPONSE_ATTRIBUTE_EARLY_ERROR_DETECTED;
@@ -218,18 +225,22 @@ libspdm_return_t libspdm_get_response_chunk_send(void *context,
         libspdm_get_spdm_response_func response_func =
             libspdm_get_response_func_via_request_code(
                 ((spdm_message_header_t*)send_info->large_message)->request_response_code);
+        LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_get_response_chunk_send %d, request_response_code 0x%x\n", __LINE__, ((spdm_message_header_t*)send_info->large_message)->request_response_code));
+        libspdm_internal_dump_hex(send_info->large_message, send_info->large_message_size);
 
         if (response_func != NULL) {
             status = response_func(
                 spdm_context,
                 send_info->large_message_size, send_info->large_message,
                 &chunk_response_size, chunk_response);
+           LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_get_response_chunk_send %d\n", __LINE__));
         }
         else {
             status = LIBSPDM_STATUS_SUCCESS;
             libspdm_generate_error_response(
                 spdm_context, SPDM_ERROR_CODE_INVALID_REQUEST, 0,
                 &chunk_response_size, chunk_response);
+            LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_get_response_chunk_send %d\n", __LINE__));
         }
 
         send_info->chunk_in_use = false;
@@ -245,6 +256,7 @@ libspdm_return_t libspdm_get_response_chunk_send(void *context,
         *response_size = sizeof(spdm_chunk_send_ack_response_t);
     }
 
+    LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_get_response_chunk_send %d, status - 0x%x\n", __LINE__, status));
     return status;
 }
 

@@ -5,6 +5,8 @@
  **/
 
 #include "internal/libspdm_requester_lib.h"
+#include "windows.h"
+#include "windowsx.h"
 
 /**
  * Send an SPDM or an APP request to a device.
@@ -41,7 +43,7 @@ libspdm_return_t libspdm_send_request(void *context, const uint32_t *session_id,
 
     spdm_context = context;
 
-    LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_send_spdm_request[%x] (0x%x): \n",
+    LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_send_request[%x] (0x%x): \n",
                    (session_id != NULL) ? *session_id : 0x0, request_size));
     libspdm_internal_dump_hex(request, request_size);
 
@@ -59,6 +61,8 @@ libspdm_return_t libspdm_send_request(void *context, const uint32_t *session_id,
         (uint8_t*)request < sender_buffer + sender_buffer_size) {
         message = sender_buffer;
         message_size = sender_buffer_size;
+        //libspdm_zero_mem(message, message_size);
+        LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "message is sender_buffer\n"));
     }
     else {
         LIBSPDM_ASSERT(
@@ -68,6 +72,8 @@ libspdm_return_t libspdm_send_request(void *context, const uint32_t *session_id,
 
         message = scratch_buffer + LIBSPDM_SCRATCH_BUFFER_SENDER_RECEIVER_OFFSET;
         message_size = LIBSPDM_SENDER_RECEIVE_BUFFER_SIZE;
+        //libspdm_zero_mem(message, message_size);
+        LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "message is scratch_buffer\n"));
     }
     #else /* LIBSPDM_ENABLE_CHUNK_CAP */
     message = sender_buffer;
@@ -96,9 +102,14 @@ libspdm_return_t libspdm_send_request(void *context, const uint32_t *session_id,
         spdm_context->last_spdm_request_size = request_size;
     }
 
+    LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "before transport_encode_message request:\n"));
+    libspdm_internal_dump_hex(request, request_size);
     status = spdm_context->transport_encode_message(
         spdm_context, session_id, is_app_message, true, request_size,
         request, &message_size, (void **)&message);
+    LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "transport_encode_message status - %p, message_size 0x%x\n",
+                  status, message_size));
+    libspdm_internal_dump_hex(message, message_size);
     if (LIBSPDM_STATUS_IS_ERROR(status)) {
         LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "transport_encode_message status - %p\n",
                        status));
@@ -147,6 +158,9 @@ libspdm_return_t libspdm_receive_response(void *context, const uint32_t *session
     uint32_t *message_session_id;
     bool is_message_app_message;
     uint64_t timeout;
+    size_t transport_header_size;
+    uint8_t *scratch_buffer;
+    size_t scratch_buffer_size;
 
     spdm_context = context;
 
@@ -175,7 +189,12 @@ libspdm_return_t libspdm_receive_response(void *context, const uint32_t *session
     /* always use scratch buffer to response.
      * if it is secured message, this scratch buffer will be used.
      * if it is normal message, the response ptr will point to receiver buffer. */
-    libspdm_get_scratch_buffer (spdm_context, response, response_size);
+    transport_header_size = spdm_context->transport_get_header_size(spdm_context);
+    libspdm_get_scratch_buffer (spdm_context, (void **)&scratch_buffer, &scratch_buffer_size);
+    *response = scratch_buffer + transport_header_size;
+    *response_size = scratch_buffer_size - transport_header_size - LIBSPDM_MAX_SPDM_MSG_SIZE - LIBSPDM_SENDER_RECEIVE_BUFFER_SIZE;
+
+    LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "QIZ: libspdm_receive_response->transport_decode_message\n"));
     status = spdm_context->transport_decode_message(
         spdm_context, &message_session_id, &is_message_app_message,
         false, message_size, message, response_size, response);
@@ -254,6 +273,8 @@ libspdm_return_t libspdm_handle_large_request(
     uint8_t *chunk_ptr;
     size_t copy_size;
     libspdm_chunk_info_t *send_info;
+
+    LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_handle_large_request\n"));
 
     /* Fail if requester or responder does not support chunk cap */
     if (!libspdm_is_capabilities_flag_supported(
@@ -512,6 +533,10 @@ libspdm_return_t libspdm_send_spdm_request(libspdm_context_t *spdm_context,
         }
     }
 
+    LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_send_spdm_request[%x] (0x%x): \n",
+                   (session_id != NULL) ? *session_id : 0x0, request_size));
+    libspdm_internal_dump_hex(request, request_size);
+
     if (((const spdm_message_header_t*) request)->request_response_code != SPDM_GET_VERSION
         && ((const spdm_message_header_t*) request)->request_response_code != SPDM_GET_CAPABILITIES
         && spdm_context->connection_info.capability.data_transfer_size != 0
@@ -607,6 +632,7 @@ libspdm_return_t libspdm_receive_spdm_response(libspdm_context_t *spdm_context,
     #else /* LIBSPDM_ENABLE_CHUNK_CAP */
     send_info = &spdm_context->chunk_context.send;
     if (send_info->chunk_in_use) {
+        LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "QIZ: libspdm_receive_spdm_response: chunk_in_use\n"));
         libspdm_copy_mem(*response, *response_size,
                          send_info->large_message, send_info->large_message_size);
         *response_size = send_info->large_message_size;
@@ -625,6 +651,7 @@ libspdm_return_t libspdm_receive_spdm_response(libspdm_context_t *spdm_context,
         status = LIBSPDM_STATUS_SUCCESS;
     }
     else {
+        LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "QIZ: libspdm_receive_spdm_response: not chunk_in_use\n"));
         response_capacity = *response_size;
         status = libspdm_receive_response(spdm_context, session_id, false,
                                           response_size, response);
@@ -640,11 +667,13 @@ libspdm_return_t libspdm_receive_spdm_response(libspdm_context_t *spdm_context,
         goto receive_done;
     }
 
+    LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "QIZ: libspdm_receive_spdm_response: request_response_code 0x%x, param1 0x%x\n", spdm_response->request_response_code, spdm_response->param1));
     if (spdm_response->request_response_code == SPDM_ERROR
         && spdm_response->param1 == SPDM_ERROR_CODE_LARGE_RESPONSE) {
 
+        LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "QIZ: libspdm_receive_spdm_response->libspdm_handle_error_large_response\n"));
         status = libspdm_handle_error_large_response(
-            spdm_context, NULL,
+            spdm_context, session_id,
             response_size, (void*) spdm_response, response_capacity);
 
         if (LIBSPDM_STATUS_IS_ERROR(status)) {

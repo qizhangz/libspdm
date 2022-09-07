@@ -115,7 +115,7 @@ void *libspdm_get_session_info_via_session_id(void *context,
     size_t index;
 
     if (session_id == INVALID_SESSION_ID) {
-        LIBSPDM_DEBUG((LIBSPDM_DEBUG_ERROR,
+        LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO,
                        "libspdm_get_session_info_via_session_id - Invalid session_id\n"));
         LIBSPDM_ASSERT(false);
         return NULL;
@@ -130,7 +130,7 @@ void *libspdm_get_session_info_via_session_id(void *context,
         }
     }
 
-    LIBSPDM_DEBUG((LIBSPDM_DEBUG_ERROR,
+    LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO,
                    "libspdm_get_session_info_via_session_id - not found session_id\n"));
     return NULL;
 }
@@ -195,7 +195,7 @@ void *libspdm_assign_session_id(void *context, uint32_t session_id,
     spdm_context = context;
 
     if (session_id == INVALID_SESSION_ID) {
-        LIBSPDM_DEBUG((LIBSPDM_DEBUG_ERROR,
+        LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO,
                        "libspdm_assign_session_id - Invalid session_id\n"));
         LIBSPDM_ASSERT(false);
         return NULL;
@@ -205,7 +205,7 @@ void *libspdm_assign_session_id(void *context, uint32_t session_id,
 
     for (index = 0; index < LIBSPDM_MAX_SESSION_COUNT; index++) {
         if (session_info[index].session_id == session_id) {
-            LIBSPDM_DEBUG((LIBSPDM_DEBUG_ERROR,
+            LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO,
                            "libspdm_assign_session_id - Duplicated session_id\n"));
             LIBSPDM_ASSERT(false);
             return NULL;
@@ -217,12 +217,13 @@ void *libspdm_assign_session_id(void *context, uint32_t session_id,
             libspdm_session_info_init(spdm_context,
                                       &session_info[index], session_id,
                                       use_psk);
+            LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, ">>>>>> QIZ: libspdm_assign_session_id->latest_session_id 0x%x\n", session_id));
             spdm_context->latest_session_id = session_id;
             return &session_info[index];
         }
     }
 
-    LIBSPDM_DEBUG((LIBSPDM_DEBUG_ERROR, "libspdm_assign_session_id - MAX session_id\n"));
+    LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_assign_session_id - MAX session_id\n"));
     return NULL;
 }
 
@@ -248,7 +249,7 @@ uint16_t libspdm_allocate_req_session_id(libspdm_context_t *spdm_context)
         }
     }
 
-    LIBSPDM_DEBUG((LIBSPDM_DEBUG_ERROR, "libspdm_allocate_req_session_id - MAX session_id\n"));
+    LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_allocate_req_session_id - MAX session_id\n"));
     return (INVALID_SESSION_ID & 0xFFFF0000) >> 16;
 }
 
@@ -274,7 +275,7 @@ uint16_t libspdm_allocate_rsp_session_id(const libspdm_context_t *spdm_context)
         }
     }
 
-    LIBSPDM_DEBUG((LIBSPDM_DEBUG_ERROR, "libspdm_allocate_rsp_session_id - MAX session_id\n"));
+    LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_allocate_rsp_session_id - MAX session_id\n"));
     return (INVALID_SESSION_ID & 0xFFFF);
 }
 
@@ -293,7 +294,7 @@ void libspdm_free_session_id(void *context, uint32_t session_id)
     spdm_context = context;
 
     if (session_id == INVALID_SESSION_ID) {
-        LIBSPDM_DEBUG((LIBSPDM_DEBUG_ERROR,
+        LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO,
                        "libspdm_free_session_id - Invalid session_id\n"));
         LIBSPDM_ASSERT(false);
         return;
@@ -309,7 +310,7 @@ void libspdm_free_session_id(void *context, uint32_t session_id)
         }
     }
 
-    LIBSPDM_DEBUG((LIBSPDM_DEBUG_ERROR, "libspdm_free_session_id - MAX session_id\n"));
+    LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_free_session_id - MAX session_id\n"));
     LIBSPDM_ASSERT(false);
     return;
 }

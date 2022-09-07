@@ -159,7 +159,7 @@ libspdm_return_t libspdm_get_response_psk_finish(void *context,
                                                response_size, response);
     }
 
-    LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_generate_session_data_key[%x]\n", session_id));
+    LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_get_response_psk_finish->libspdm_generate_session_data_key[%x]\n", session_id));
     result = libspdm_calculate_th2_hash(spdm_context, session_info, false,
                                         th2_hash_data);
     if (!result) {

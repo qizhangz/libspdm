@@ -136,8 +136,10 @@ libspdm_return_t libspdm_process_request(void *context, uint32_t **session_id,
     uint32_t *message_session_id;
     uint8_t *decoded_message_ptr;
     size_t decoded_message_size;
-
     spdm_context = context;
+    size_t transport_header_size;
+    uint8_t *scratch_buffer;
+    size_t scratch_buffer_size;
 
     if (request == NULL) {
         return LIBSPDM_STATUS_INVALID_PARAMETER;
@@ -156,13 +158,18 @@ libspdm_return_t libspdm_process_request(void *context, uint32_t **session_id,
     /* always use scratch buffer to response.
      * if it is secured message, this scratch buffer will be used.
      * if it is normal message, the response ptr will point to receiver buffer. */
-    libspdm_get_scratch_buffer (spdm_context, (void **)&decoded_message_ptr, &decoded_message_size);
+    transport_header_size = spdm_context->transport_get_header_size(spdm_context);
+    libspdm_get_scratch_buffer (spdm_context, (void **)&scratch_buffer, &scratch_buffer_size);
+    decoded_message_ptr = scratch_buffer + transport_header_size;
+    decoded_message_size = scratch_buffer_size - transport_header_size - LIBSPDM_MAX_SPDM_MSG_SIZE - LIBSPDM_SENDER_RECEIVE_BUFFER_SIZE;
+
+    libspdm_internal_dump_hex(request, request_size);
     status = spdm_context->transport_decode_message(
         spdm_context, &message_session_id, is_app_message, true,
         request_size, request, &decoded_message_size,
         (void **)&decoded_message_ptr);
     if (LIBSPDM_STATUS_IS_ERROR(status)) {
-        LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "transport_decode_message : %p\n", status));
+        LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "QIZ: libspdm_process_request: transport_decode_message : %p\n", status));
         if (spdm_context->last_spdm_error.error_code != 0) {
 
             /* If the SPDM error code is Non-Zero, that means we need send the error message back to requester.
@@ -341,9 +348,11 @@ libspdm_return_t libspdm_build_response(void *context, const uint32_t *session_i
     size_t transport_header_size;
     uint8_t *scratch_buffer;
     size_t scratch_buffer_size;
-
+    uint8_t request_response_code;
     #if LIBSPDM_ENABLE_CHUNK_CAP
     libspdm_chunk_info_t* get_info;
+    spdm_chunk_response_response_t *chunk_rsp;
+    uint8_t* chunk_ptr;
     #endif /* LIBSPDM_ENABLE_CHUNK_CAP */
 
     spdm_context = context;
@@ -355,7 +364,7 @@ libspdm_return_t libspdm_build_response(void *context, const uint32_t *session_i
     if (session_id != NULL) {
         libspdm_get_scratch_buffer (spdm_context, (void **)&scratch_buffer, &scratch_buffer_size);
         my_response = scratch_buffer + transport_header_size;
-        my_response_size = scratch_buffer_size - transport_header_size;
+        my_response_size = scratch_buffer_size - transport_header_size - LIBSPDM_MAX_SPDM_MSG_SIZE - LIBSPDM_SENDER_RECEIVE_BUFFER_SIZE;
     } else {
         my_response = (uint8_t *)*response + transport_header_size;
         my_response_size = *response_size - transport_header_size;
@@ -439,10 +448,9 @@ libspdm_return_t libspdm_build_response(void *context, const uint32_t *session_i
         return LIBSPDM_STATUS_INVALID_PARAMETER;
     }
 
-    LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "SpdmSendResponse[%x] ...\n",
-                   (session_id != NULL) ? *session_id : 0));
-
     spdm_request = (void *)spdm_context->last_spdm_request;
+    LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "QIZ: SpdmSendResponse[%x] ...request_response_code 0x%x\n",
+                   (session_id != NULL) ? *session_id : 0, spdm_request->request_response_code));
     if (spdm_context->last_spdm_request_size == 0) {
         return LIBSPDM_STATUS_INVALID_STATE_LOCAL;
     }
@@ -514,7 +522,7 @@ libspdm_return_t libspdm_build_response(void *context, const uint32_t *session_i
          * Therefore, if the requester did not perform chunk_get requests for
          * previous large responses, they will be lost. */
         if (get_info->chunk_in_use) {
-            LIBSPDM_DEBUG((LIBSPDM_DEBUG_ERROR,
+            LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO,
                            "Warning: Overwriting previous unrequested chunk_get info.\n"));
         }
 
@@ -529,7 +537,7 @@ libspdm_return_t libspdm_build_response(void *context, const uint32_t *session_i
         scratch_buffer_size = scratch_buffer_size - LIBSPDM_SENDER_RECEIVE_BUFFER_SIZE;
 
         if (my_response_size < scratch_buffer_size) {
-
+            uint8_t tmp_rr_code;
             get_info->chunk_in_use = true;
             /* Increment chunk_handle here as opposed to end of chunk_get handler
              * in case requester never issues chunk_get. */
@@ -543,6 +551,7 @@ libspdm_return_t libspdm_build_response(void *context, const uint32_t *session_i
              * a CHUNK_SEND_ACK + non-chunk response. In this case, to prevent chunking within
              * chunking, only send back the actual response, by saving only non-chunk portion
              * in the scratch buffer, used to respond to the next CHUNK_GET request. */
+            tmp_rr_code = ((spdm_message_header_t*) my_response)->request_response_code;
             if (((spdm_message_header_t*) my_response)
                 ->request_response_code == SPDM_CHUNK_SEND_ACK) {
                 libspdm_copy_mem(scratch_buffer, scratch_buffer_size,
@@ -560,6 +569,9 @@ libspdm_return_t libspdm_build_response(void *context, const uint32_t *session_i
                 get_info->large_message_size = my_response_size;
             }
 
+            LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO,
+                           "QIZ: generate SPDM_ERROR_CODE_LARGE_RESPONSE: request_response_code 0x%x, large_message_size 0x%x\n", tmp_rr_code, get_info->large_message_size));
+            libspdm_internal_dump_hex(get_info->large_message, get_info->large_message_size);
             status = libspdm_generate_extended_error_response(spdm_context,
                                                               SPDM_ERROR_CODE_LARGE_RESPONSE, 0,
                                                               sizeof(uint8_t),
@@ -569,7 +581,7 @@ libspdm_return_t libspdm_build_response(void *context, const uint32_t *session_i
         else
         #endif /* LIBSPDM_ENABLE_CHUNK_CAP */
         {
-            LIBSPDM_DEBUG((LIBSPDM_DEBUG_ERROR,
+            LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO,
                            "Warning: Could not save chunk. Scratch buffer too small.\n"));
 
             status = libspdm_generate_error_response(spdm_context,
@@ -614,19 +626,41 @@ libspdm_return_t libspdm_build_response(void *context, const uint32_t *session_i
     }
 
     spdm_response = (void *)my_response;
+    request_response_code = spdm_response->request_response_code;
+    #if LIBSPDM_ENABLE_CHUNK_CAP
+    switch (request_response_code) {
+        case SPDM_CHUNK_SEND_ACK:
+            request_response_code = ((spdm_message_header_t*)(my_response + sizeof(spdm_chunk_send_ack_response_t)))
+                                     -> request_response_code;
+            break;
+        case SPDM_CHUNK_RESPONSE:
+            chunk_rsp = (spdm_chunk_response_response_t *)my_response;
+            chunk_ptr = (uint8_t*) (((uint32_t*) (chunk_rsp + 1)) + 1);
+            if (chunk_rsp->chunk_seq_no == 0) {
+                request_response_code = ((spdm_message_header_t*)chunk_ptr)->request_response_code;
+                LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_build_response->SPDM_CHUNK_RESPONSE:  SPDM_FINISH_RSP %d\n", __LINE__));
+            }
+            break;
+        default:
+            break;
+    }
+    #endif
+
     if (session_id != NULL) {
-        switch (spdm_response->request_response_code) {
+        switch (request_response_code) {
         case SPDM_FINISH_RSP:
             if (!libspdm_is_capabilities_flag_supported(
                     spdm_context, false,
                     SPDM_GET_CAPABILITIES_REQUEST_FLAGS_HANDSHAKE_IN_THE_CLEAR_CAP,
                     SPDM_GET_CAPABILITIES_RESPONSE_FLAGS_HANDSHAKE_IN_THE_CLEAR_CAP)) {
+                LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_build_response->LIBSPDM_SESSION_STATE_ESTABLISHED\n"));
                 libspdm_set_session_state(
                     spdm_context, *session_id,
                     LIBSPDM_SESSION_STATE_ESTABLISHED);
             }
             break;
         case SPDM_PSK_FINISH_RSP:
+            LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_build_response->SPDM_PSK_FINISH_RSP\n"));
             libspdm_set_session_state(spdm_context, *session_id,
                                       LIBSPDM_SESSION_STATE_ESTABLISHED);
             break;
@@ -635,39 +669,120 @@ libspdm_return_t libspdm_build_response(void *context, const uint32_t *session_i
                                       LIBSPDM_SESSION_STATE_NOT_STARTED);
             result = libspdm_stop_watchdog(*session_id);
             if (!result) {
-                LIBSPDM_DEBUG((LIBSPDM_DEBUG_ERROR, "libspdm_stop_watchdog error\n"));
+                LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_stop_watchdog error\n"));
                 /* No need return error for internal watchdog error */
             }
             libspdm_free_session_id(spdm_context, *session_id);
             break;
+        #if 0 //LIBSPDM_ENABLE_CHUNK_CAP
+        case SPDM_CHUNK_SEND_ACK:
+            if (((spdm_message_header_t*)(my_response + sizeof(spdm_chunk_send_ack_response_t)))
+                  ->request_response_code == SPDM_PSK_FINISH_RSP) {
+                LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_build_response->SPDM_PSK_FINISH_RSP %d\n", __LINE__));
+                libspdm_set_session_state(spdm_context, *session_id,
+                                          LIBSPDM_SESSION_STATE_ESTABLISHED);
+            }
+            break;
+        #endif
         default:
             /* reset watchdog in any session messages. */
             result = libspdm_reset_watchdog(*session_id);
             if (!result) {
-                LIBSPDM_DEBUG((LIBSPDM_DEBUG_ERROR, "libspdm_reset_watchdog error\n"));
+                LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_reset_watchdog error\n"));
                 /* No need return error for internal watchdog error */
             }
             break;
         }
     } else {
-        switch (spdm_response->request_response_code) {
+        switch (request_response_code) {
         case SPDM_FINISH_RSP:
+            LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_build_response->SPDM_FINISH_RSP %d\n", __LINE__));
             if (libspdm_is_capabilities_flag_supported(
                     spdm_context, false,
                     SPDM_GET_CAPABILITIES_REQUEST_FLAGS_HANDSHAKE_IN_THE_CLEAR_CAP,
                     SPDM_GET_CAPABILITIES_RESPONSE_FLAGS_HANDSHAKE_IN_THE_CLEAR_CAP)) {
+                LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_build_response->LIBSPDM_SESSION_STATE_ESTABLISHED %d\n", __LINE__));
                 libspdm_set_session_state(
                     spdm_context,
                     spdm_context->latest_session_id,
                     LIBSPDM_SESSION_STATE_ESTABLISHED);
             }
             break;
+        #if 0 //LIBSPDM_ENABLE_CHUNK_CAP
+        case SPDM_CHUNK_SEND_ACK:
+            if ((((spdm_message_header_t*)(my_response + sizeof(spdm_chunk_send_ack_response_t)))
+                  ->request_response_code == SPDM_FINISH_RSP)
+                && (libspdm_is_capabilities_flag_supported(
+                        spdm_context, false,
+                        SPDM_GET_CAPABILITIES_REQUEST_FLAGS_HANDSHAKE_IN_THE_CLEAR_CAP,
+                        SPDM_GET_CAPABILITIES_RESPONSE_FLAGS_HANDSHAKE_IN_THE_CLEAR_CAP))) {
+                LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_build_response->LIBSPDM_SESSION_STATE_ESTABLISHED %d\n", __LINE__));
+                libspdm_set_session_state(
+                    spdm_context,
+                    spdm_context->latest_session_id,
+                    LIBSPDM_SESSION_STATE_ESTABLISHED);
+            }
+            break;
+        case SPDM_CHUNK_RESPONSE:
+            chunk_rsp = (spdm_chunk_response_response_t *)my_response;
+            chunk_ptr = (uint8_t*) (((uint32_t*) (chunk_rsp + 1)) + 1);
+            if ((chunk_rsp->chunk_seq_no == 0)
+                && (((spdm_message_header_t*)chunk_ptr)->request_response_code == SPDM_FINISH_RSP)
+                && (libspdm_is_capabilities_flag_supported(
+                        spdm_context, false,
+                        SPDM_GET_CAPABILITIES_REQUEST_FLAGS_HANDSHAKE_IN_THE_CLEAR_CAP,
+                        SPDM_GET_CAPABILITIES_RESPONSE_FLAGS_HANDSHAKE_IN_THE_CLEAR_CAP))) {
+                LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_build_response->LIBSPDM_SESSION_STATE_ESTABLISHED %d\n", __LINE__));
+                libspdm_set_session_state(
+                    spdm_context,
+                    spdm_context->latest_session_id,
+                    LIBSPDM_SESSION_STATE_ESTABLISHED);
+            }
+            break;
+        #endif
         default:
             /* No session state update needed */
             break;
         }
     }
 
+    LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_build_response->latest_session_id 0x%x\n", spdm_context->latest_session_id));
+
+#if 0
+    if (((spdm_message_header_t*) my_response)
+        ->request_response_code == SPDM_CHUNK_SEND_ACK) {
+        LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_build_response->SPDM_CHUNK_SEND_ACK %d\n", __LINE__));
+        if (((spdm_message_header_t*)(my_response + sizeof(spdm_chunk_send_ack_response_t)))->request_response_code == SPDM_FINISH_RSP) {
+            LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_build_response->LIBSPDM_SESSION_STATE_ESTABLISHED %d\n", __LINE__));
+            libspdm_set_session_state(
+                spdm_context,
+                spdm_context->latest_session_id,
+                LIBSPDM_SESSION_STATE_ESTABLISHED);
+        }
+    }
+#endif
+
+#if 0
+    if (((spdm_message_header_t*) my_response)
+        ->request_response_code == SPDM_CHUNK_RESPONSE) {
+        spdm_chunk_response_response_t *chunk_rsp;
+        uint8_t* chunk_ptr;
+        chunk_rsp = (spdm_chunk_response_response_t *)my_response;
+        chunk_ptr = (uint8_t*) (((uint32_t*) (chunk_rsp + 1)) + 1);
+        LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, ">>>>> QIZ: libspdm_build_response->SPDM_CHUNK_RESPONSE %d, sizeof(spdm_chunk_response_response_t) %d\n", __LINE__, sizeof(spdm_chunk_response_response_t)));
+        LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, ">>>>> QIZ: libspdm_build_response->chunk_seq_no 0x%x, chunk_size 0x%x\n", chunk_rsp->chunk_seq_no, chunk_rsp->chunk_size));
+        libspdm_internal_dump_hex(my_response, my_response_size);
+        
+        if ((((spdm_message_header_t*)chunk_ptr)->request_response_code == SPDM_FINISH_RSP)
+              && (chunk_rsp->chunk_seq_no == 0)) {
+            LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_build_response->LIBSPDM_SESSION_STATE_ESTABLISHED %d\n", __LINE__));
+            libspdm_set_session_state(
+                spdm_context,
+                spdm_context->latest_session_id,
+                LIBSPDM_SESSION_STATE_ESTABLISHED);
+        }
+    }
+#endif
     return LIBSPDM_STATUS_SUCCESS;
 }
 

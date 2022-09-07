@@ -271,11 +271,14 @@ libspdm_return_t libspdm_handle_error_large_response(
         spdm_request->chunk_seq_no = chunk_seq_no;
         spdm_request_size = sizeof(spdm_chunk_get_request_t);
 
-        LIBSPDM_DEBUG((LIBSPDM_DEBUG_ERROR,
+        LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO,
                        "CHUNK_GET Handle %d SeqNo %d\n", chunk_handle, chunk_seq_no));
-
+        LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO,
+                       "QIZ: libspdm_handle_error_large_response -> libspdm_send_spdm_request\n"));
         status = libspdm_send_spdm_request(spdm_context, session_id,
                                            spdm_request_size, spdm_request);
+        LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO,
+                       "QIZ: libspdm_handle_error_large_response -> libspdm_send_spdm_request - status 0x%x\n", status));
         spdm_request = NULL;
         spdm_request_size = 0;
         if (LIBSPDM_STATUS_IS_ERROR(status)) {
@@ -286,9 +289,13 @@ libspdm_return_t libspdm_handle_error_large_response(
         void* response = message;
         size_t response_size = message_size;
 
+        LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO,
+                       "QIZ: libspdm_handle_error_large_response -> libspdm_receive_spdm_response\n"));
         status = libspdm_receive_spdm_response(
             spdm_context, session_id,
             &response_size, &response);
+        LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO,
+                       "QIZ: libspdm_handle_error_large_response -> libspdm_receive_spdm_response - status 0x%x\n", status));
 
         if (LIBSPDM_STATUS_IS_ERROR(status)) {
             break;

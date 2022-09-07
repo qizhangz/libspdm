@@ -197,6 +197,7 @@ libspdm_return_t libspdm_get_response_key_exchange(void *context,
             response_size, response);
     }
     session_id = (req_session_id << 16) | rsp_session_id;
+    LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, ">>>>>> QIZ: libspdm_get_response_key_exchange->libspdm_assign_session_id\n"));
     session_info = libspdm_assign_session_id(spdm_context, session_id, false);
     if (session_info == NULL) {
         return libspdm_generate_error_response(

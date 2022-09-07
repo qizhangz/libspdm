@@ -46,6 +46,7 @@ libspdm_return_t libspdm_get_response_digests(void *context, size_t request_size
     /*populated solt index*/
     uint8_t slot_index;
 
+    LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "QIZ: libspdm_get_response_digests\n"));
     spdm_context = context;
     spdm_request = request;
 

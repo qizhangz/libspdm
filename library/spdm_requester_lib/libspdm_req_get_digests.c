@@ -65,6 +65,8 @@ static libspdm_return_t libspdm_try_get_digest(void *context, const uint32_t *se
     libspdm_session_info_t *session_info;
     libspdm_session_state_t session_state;
 
+    LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_try_get_digest[0x%x]\n",
+                   (session_id != NULL) ? *session_id : 0));
     spdm_context = context;
     if (!libspdm_is_capabilities_flag_supported(
             spdm_context, true, 0,
@@ -106,7 +108,9 @@ static libspdm_return_t libspdm_try_get_digest(void *context, const uint32_t *se
     spdm_request->header.param1 = 0;
     spdm_request->header.param2 = 0;
     spdm_request_size = sizeof(spdm_get_digest_request_t);
+    LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "QIZ: libspdm_try_get_digest->libspdm_send_spdm_request\n"));
     status = libspdm_send_spdm_request(spdm_context, session_id, spdm_request_size, spdm_request);
+    LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "QIZ: libspdm_try_get_digest->libspdm_send_spdm_request - status 0x%x\n", status));
     if (LIBSPDM_STATUS_IS_ERROR(status)) {
         libspdm_release_sender_buffer (spdm_context);
         return status;
@@ -125,8 +129,10 @@ static libspdm_return_t libspdm_try_get_digest(void *context, const uint32_t *se
     spdm_response_size = message_size;
 
     libspdm_zero_mem(spdm_response, spdm_response_size);
+    LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "QIZ: libspdm_try_get_digest->libspdm_receive_spdm_response\n"));
     status = libspdm_receive_spdm_response(
         spdm_context, session_id, &spdm_response_size, (void **)&spdm_response);
+    LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "QIZ: libspdm_try_get_digest->libspdm_receive_spdm_response - status 0x%x\n", status));
     if (LIBSPDM_STATUS_IS_ERROR(status)) {
         goto receive_done;
     }
