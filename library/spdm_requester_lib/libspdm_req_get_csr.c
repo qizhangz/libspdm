@@ -48,6 +48,7 @@ static libspdm_return_t libspdm_try_get_csr(void *context,
 
     spdm_context = context;
 
+    LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_try_get_csr %d\n", __LINE__));
     if (!libspdm_is_capabilities_flag_supported(
             spdm_context, true, 0,
             SPDM_GET_CAPABILITIES_RESPONSE_FLAGS_CSR_CAP)) {
@@ -124,6 +125,7 @@ static libspdm_return_t libspdm_try_get_csr(void *context,
     status = libspdm_receive_spdm_response(spdm_context, session_id,
                                            &spdm_response_size, (void **)&spdm_response);
 
+    LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_try_get_csr status 0x%x, %d\n", status, __LINE__));
     if (LIBSPDM_STATUS_IS_ERROR(status)) {
         goto receive_done;
     }
@@ -132,6 +134,7 @@ static libspdm_return_t libspdm_try_get_csr(void *context,
         goto receive_done;
     }
     if (spdm_response->header.spdm_version != spdm_request->header.spdm_version) {
+        LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_try_get_csr %d\n", __LINE__));
         status = LIBSPDM_STATUS_INVALID_MSG_FIELD;
         goto receive_done;
     }
@@ -146,11 +149,13 @@ static libspdm_return_t libspdm_try_get_csr(void *context,
         }
     } else if (spdm_response->header.request_response_code != SPDM_CSR) {
         status = LIBSPDM_STATUS_INVALID_MSG_FIELD;
+        LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_try_get_csr %d\n", __LINE__));
         goto receive_done;
     }
 
     if (spdm_response->csr_length <= 0) {
         status = LIBSPDM_STATUS_INVALID_MSG_FIELD;
+        LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_try_get_csr %d\n", __LINE__));
         goto receive_done;
     }
 

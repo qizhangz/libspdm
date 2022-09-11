@@ -656,6 +656,7 @@ libspdm_return_t libspdm_receive_spdm_response(libspdm_context_t *spdm_context,
         status = libspdm_receive_response(spdm_context, session_id, false,
                                           response_size, response);
         if (LIBSPDM_STATUS_IS_ERROR(status)) {
+            LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_receive_spdm_response %d\n", __LINE__));
             goto receive_done;
         }
     }
@@ -677,6 +678,7 @@ libspdm_return_t libspdm_receive_spdm_response(libspdm_context_t *spdm_context,
             response_size, (void*) spdm_response, response_capacity);
 
         if (LIBSPDM_STATUS_IS_ERROR(status)) {
+            LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_receive_spdm_response %d\n", __LINE__));
             goto receive_done;
         }
 
@@ -697,9 +699,11 @@ libspdm_return_t libspdm_receive_spdm_response(libspdm_context_t *spdm_context,
             spdm_response->request_response_code != SPDM_FINISH_RSP &&
             spdm_response->request_response_code != SPDM_PSK_EXCHANGE_RSP &&
             spdm_response->request_response_code != SPDM_ENCAPSULATED_REQUEST &&
-            spdm_response->request_response_code != SPDM_ENCAPSULATED_RESPONSE_ACK
+            spdm_response->request_response_code != SPDM_ENCAPSULATED_RESPONSE_ACK &&
+            spdm_response->request_response_code != SPDM_CSR
             ) {
             status = LIBSPDM_STATUS_INVALID_MSG_FIELD;
+            LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_receive_spdm_response %d\n", __LINE__));
             goto receive_done;
         }
     }
