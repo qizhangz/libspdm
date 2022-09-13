@@ -294,7 +294,7 @@
 /* Maximum size of a single SPDM message.
  * It matches DataTransferSize in SPDM specification. */
 #ifndef LIBSPDM_DATA_TRANSFER_SIZE
-#define LIBSPDM_DATA_TRANSFER_SIZE LIBSPDM_MAX_MESSAGE_BUFFER_SIZE
+#define LIBSPDM_DATA_TRANSFER_SIZE 42
 #endif
 
 /* Required sender/receive buffer in device io.

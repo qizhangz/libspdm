@@ -2165,7 +2165,7 @@ libspdm_return_t libspdm_init_context(void *context)
         sizeof(spdm_context->encap_context.certificate_chain_buffer.buffer);
 
     /* From the config.h, need different value for CHUNK - TBD*/
-    spdm_context->local_context.capability.data_transfer_size = 42; //LIBSPDM_DATA_TRANSFER_SIZE;
+    spdm_context->local_context.capability.data_transfer_size = LIBSPDM_DATA_TRANSFER_SIZE;
     spdm_context->local_context.capability.max_spdm_msg_size = LIBSPDM_MAX_SPDM_MSG_SIZE;
 
     secured_message_context = (void *)((size_t)(spdm_context + 1));
