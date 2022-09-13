@@ -630,15 +630,18 @@ libspdm_return_t libspdm_build_response(void *context, const uint32_t *session_i
     #if LIBSPDM_ENABLE_CHUNK_CAP
     switch (request_response_code) {
         case SPDM_CHUNK_SEND_ACK:
-            request_response_code = ((spdm_message_header_t*)(my_response + sizeof(spdm_chunk_send_ack_response_t)))
-                                     -> request_response_code;
+            if (my_response_size > sizeof(spdm_chunk_send_ack_response_t)) {
+                request_response_code = ((spdm_message_header_t*)(my_response + sizeof(spdm_chunk_send_ack_response_t)))
+                                         -> request_response_code;
+                LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_build_response->SPDM_CHUNK_SEND_ACK:  request_response_code 0x%x\n", request_response_code));
+            }
             break;
         case SPDM_CHUNK_RESPONSE:
             chunk_rsp = (spdm_chunk_response_response_t *)my_response;
             chunk_ptr = (uint8_t*) (((uint32_t*) (chunk_rsp + 1)) + 1);
             if (chunk_rsp->chunk_seq_no == 0) {
                 request_response_code = ((spdm_message_header_t*)chunk_ptr)->request_response_code;
-                LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_build_response->SPDM_CHUNK_RESPONSE:  SPDM_FINISH_RSP %d\n", __LINE__));
+                LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_build_response->SPDM_CHUNK_RESPONSE:  request_response_code 0x%x\n", request_response_code));
             }
             break;
         default:
@@ -672,6 +675,7 @@ libspdm_return_t libspdm_build_response(void *context, const uint32_t *session_i
                 LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_stop_watchdog error\n"));
                 /* No need return error for internal watchdog error */
             }
+            LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_build_response->SPDM_END_SESSION_ACK\n"));
             libspdm_free_session_id(spdm_context, *session_id);
             break;
         #if 0 //LIBSPDM_ENABLE_CHUNK_CAP
